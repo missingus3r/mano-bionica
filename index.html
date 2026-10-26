@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mano biónica DIY</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --side: 430px; --bg: #0e1116; --panel: #141922; --panel2: #1a2029; --line: #262e3a; --tx: #e6ebf1; --mut: #8b95a3;
+    --acc: #3fd0b6; --acc2: #ffb347; --sel: #2f7dff; --ok: #3ddc84; --bad: #ff5a5a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--tx); font: 13px/1.4 system-ui, "Segoe UI", sans-serif; overflow: hidden; }
+  body.wide { --side: 600px; }
+  button { font: inherit; color: inherit; }
+  #app { position: fixed; left: var(--side); right: 0; top: 0; bottom: 0; }
+  #app canvas { display: block; }
+
+  /* ---------- panel lateral ---------- */
+  #side { position: fixed; left: 0; top: 0; bottom: 0; width: var(--side); background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; z-index: 5; }
+  #side header { padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+  #side h1 { margin: 0; font-size: 17px; letter-spacing: .2px; display: flex; align-items: center; gap: 8px; }
+  #side h1 i { width: 10px; height: 10px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 12px var(--acc); display: inline-block; }
+  #side header p { margin: 4px 0 0; color: var(--mut); font-size: 12px; }
+  #side header p.demo { color: #ffc46b; font-size: 11.5px; }
+  #side header p.demo a { color: #ffc46b; }
+  #side .hrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .backlab { flex: none; color: #c9d2dc; text-decoration: none; font-size: 11.5px; font-weight: 700; letter-spacing: .3px; border: 1px solid #34445c; border-radius: 99px; padding: 4px 11px; background: #1a2230; transition: border-color .2s, color .2s; }
+  .backlab:hover { color: #fff; border-color: #3fd0b6; }
+  .tabs { display: flex; border-bottom: 1px solid var(--line); }
+  .tabs button { flex: 1; background: none; border: 0; padding: 10px 6px; color: var(--mut); cursor: pointer; border-bottom: 2px solid transparent; font-weight: 600; }
+  .tabs button.on { color: var(--tx); border-bottom-color: var(--acc); }
+  .tab { flex: 1; overflow-y: auto; padding: 12px 14px 18px; }
+  .tab::-webkit-scrollbar, #log::-webkit-scrollbar, .tw::-webkit-scrollbar, #asmList::-webkit-scrollbar { width: 8px; }
+  .tab::-webkit-scrollbar-thumb, #log::-webkit-scrollbar-thumb, .tw::-webkit-scrollbar-thumb, #asmList::-webkit-scrollbar-thumb { background: #2a3340; border-radius: 4px; }
+  .sec { margin-bottom: 14px; }
+  .sec > label, .lab { display: block; color: var(--mut); font-size: 11px; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px; font-weight: 600; }
+  .seg { display: flex; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; }
+  .seg label { flex: 1; text-align: center; padding: 7px 4px; border-radius: 6px; cursor: pointer; color: var(--mut); font-weight: 600; font-size: 12px; }
+  .seg input { display: none; }
+  .seg label:has(input:checked) { background: #1f3a3a; color: var(--tx); box-shadow: inset 0 0 0 1px #2c6a62; }
+  .seg small { display: block; font-weight: 400; font-size: 10.5px; color: var(--mut); }
+  select, input[type=search] { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; color: var(--tx); padding: 7px 8px; font: inherit; }
+  .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .btn { background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 8px 10px; cursor: pointer; font-weight: 600; text-align: center; }
+  .btn:hover:not(:disabled) { border-color: #3a4656; }
+  .btn:disabled { opacity: .4; cursor: default; }
+  .btn.pri { background: var(--acc); color: #06201b; border-color: var(--acc); }
+  .btn.pri2 { background: #2a6fe8; color: #fff; border-color: #2a6fe8; }
+  .btn.on { border-color: var(--acc); background: #173430; color: #fff; }
+  .row { display: flex; gap: 8px; align-items: center; }
+  .row > * { flex: 1; }
+  input[type=range] { width: 100%; accent-color: var(--acc); }
+  .chk { display: flex; align-items: center; gap: 6px; color: #c3ccd6; font-size: 12px; }
+  .note { color: var(--mut); font-size: 11px; margin-top: 8px; }
+
+  /* gestos */
+  #gest { display: grid; grid-template-columns: repeat(2, 1fr); gap: 5px; }
+  #gest button { display: flex; align-items: center; gap: 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; cursor: pointer; font-weight: 600; font-size: 12px; text-align: left; }
+  #gest button kbd { font: 700 10px ui-monospace, Consolas, monospace; color: var(--mut); background: #0c1015; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  #gest button.on { border-color: var(--acc); background: #173430; }
+  #gest button.det { box-shadow: inset 3px 0 0 var(--acc2); }
+  #manualBox[hidden] { display: none; }
+  .leapBox { background: #121b24; border: 1px solid #24405c; border-radius: 10px; padding: 9px 10px; }
+  .pill { font-size: 11px; font-weight: 700; border-radius: 99px; padding: 1px 8px; background: #222a35; color: var(--mut); }
+  .pill.hand { background: #143522; color: var(--ok); } .pill.nohand, .pill.wait { background: #352a14; color: #ffc46b; } .pill.nobridge { background: #2c1416; color: #ff9b9b; }
+  .note code { background: #0c1015; padding: 0 4px; border-radius: 4px; color: #c9d2dc; }
+  #leapCam { position: fixed; right: 12px; bottom: 360px; width: 360px; z-index: 4; border: 1px solid #24405c; border-radius: 10px; overflow: hidden; background: rgba(10,13,18,.94); }
+  #leapCam .mh { display: flex; justify-content: space-between; padding: 5px 9px; font-size: 11.5px; font-weight: 700; border-bottom: 1px solid var(--line); }
+  #leapCam .mh span { color: var(--mut); font-weight: 500; }
+  #leapCam img { display: block; width: 100%; aspect-ratio: 640 / 240; background: #000; object-fit: contain; }
+  #leapCam canvas { display: block; width: 100%; background: #000; }
+  #leapCam img[hidden], #leapCam canvas[hidden] { display: none; }
+  body.leapOn #gest { opacity: .45; pointer-events: none; }
+  .lb { background: none; border: 0; color: #7fb2ff; cursor: pointer; font-size: 11px; padding: 0; }
+  #mrBox { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .mr { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+  .mr.on { border-color: var(--acc); background: #15302c; }
+  .mr .mh { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 12px; margin-bottom: 2px; }
+  .mr .mh label { display: flex; gap: 4px; align-items: center; font-weight: 600; font-size: 11px; color: var(--mut); cursor: pointer; }
+  .mr .js { display: grid; grid-template-columns: 62px 1fr; align-items: center; gap: 0 6px; font-size: 11px; color: var(--mut); }
+  .mr:not(.on) input[type=range] { opacity: .45; }
+  #manualBox { display: grid; grid-template-columns: 74px 1fr; gap: 3px 8px; align-items: center; margin-top: 8px; font-size: 12px; color: #c3ccd6; }
+  .sl { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+  .sl label { color: var(--mut); font-size: 11px; display: flex; justify-content: space-between; }
+  .sl label b { color: var(--tx); font-weight: 600; }
+
+  /* decodificador */
+  .detBox { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 11px; }
+  .detTop { display: flex; justify-content: space-between; align-items: baseline; }
+  #detName { font-size: 18px; font-weight: 800; color: var(--acc2); }
+  #detConf { color: var(--mut); font-variant-numeric: tabular-nums; }
+  #probs { display: grid; grid-template-columns: 112px 1fr 38px; gap: 2px 6px; margin-top: 8px; font-size: 11.5px; align-items: center; }
+  #probs span { color: #aeb8c4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #probs i { display: block; height: 7px; border-radius: 4px; background: #24303f; position: relative; overflow: hidden; }
+  #probs i b { position: absolute; left: 0; top: 0; bottom: 0; background: #4f8fd6; border-radius: 4px; }
+  #probs i b.top { background: var(--acc2); }
+  #probs em { color: var(--mut); font-style: normal; text-align: right; font-variant-numeric: tabular-nums; }
+  #regBars { display: none; grid-template-columns: 70px 1fr 38px; gap: 3px 6px; margin-top: 8px; font-size: 11.5px; align-items: center; }
+  body.reg #probs { display: none; } body.reg #regBars { display: grid; }
+  #regBars i { display: block; height: 8px; border-radius: 4px; background: #24303f; position: relative; overflow: hidden; }
+  #regBars i b { position: absolute; top: 0; bottom: 0; background: var(--acc); }
+  #regBars span { color: #aeb8c4; } #regBars em { color: var(--mut); font-style: normal; text-align: right; }
+  #calRes { margin-top: 8px; font-size: 12px; color: #c3ccd6; }
+  #calRes b { color: var(--acc); }
+  #conf { width: 100%; background: #0c1015; border-radius: 8px; border: 1px solid var(--line); display: block; margin-top: 6px; }
+  #band { width: 100%; background: #0c1015; border-radius: 8px; border: 1px solid var(--line); display: block; }
+  #log { height: 150px; overflow-y: auto; background: #0a0d12; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font: 11px/1.5 ui-monospace, Consolas, monospace; color: #8fa1b5; }
+  #log .hdr { color: #ffb36b; } #log .ok { color: var(--ok); } #log .err { color: var(--bad); } #log .tx { color: #7fb2ff; }
+  .lhead { display: flex; justify-content: space-between; align-items: center; }
+  .lhead button { background: none; border: 0; color: var(--mut); cursor: pointer; font-size: 11px; }
+
+  /* tabla de partes */
+  .tw { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  td { padding: 6px 6px; border-bottom: 1px solid #1d242e; vertical-align: top; }
+  tr.cat td { background: #10151c; color: var(--acc); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; padding: 7px 8px; }
+  tr[data-key] { cursor: pointer; }
+  tr[data-key]:hover td { background: #18202a; }
+  tr.sel td { background: #142846 !important; }
+  tr.have td { opacity: .5; }
+  td.idx { color: var(--mut); font-variant-numeric: tabular-nums; width: 22px; }
+  td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  td.dim { color: var(--mut); }
+  td .u { color: var(--mut); font-size: 10.5px; margin-left: 2px; }
+  .pn { font-weight: 600; }
+  .ps { color: var(--mut); font-size: 11px; }
+  td a { color: #7fb2ff; text-decoration: none; font-weight: 700; margin-right: 4px; }
+  .b { display: inline-block; font-size: 10px; padding: 0 5px; border-radius: 9px; font-weight: 700; font-style: normal; }
+  .b.ok { background: #143522; color: var(--ok); }
+  .b.est { background: #352a14; color: #ffc46b; }
+  .b.nm { background: #222a35; color: var(--mut); font-weight: 600; }
+  #tot { margin-top: 10px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 11px; }
+  #tot div { display: flex; justify-content: space-between; padding: 3px 0; }
+  #tot div:first-child b { font-size: 17px; color: var(--acc); }
+  #tot .miss b { color: #7fb2ff; }
+  .info h3 { margin: 16px 0 6px; font-size: 14px; } .info h3:first-child { margin-top: 2px; }
+  .info p, .info li { color: #c3ccd6; } .info ul, .info ol { padding-left: 18px; margin: 4px 0; }
+  .info .warn { background: #2c2210; border: 1px solid #6b5220; border-radius: 8px; padding: 8px 10px; color: #ffd79b; }
+  .info table td { font-size: 12px; } .info table td:first-child { color: var(--mut); }
+  .info code { background: #0c1015; padding: 1px 5px; border-radius: 4px; }
+  .info a { color: #7fb2ff; }
+
+  /* armado */
+  .asmHead { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .asmHead span { color: var(--acc); font-weight: 700; font-size: 12px; }
+  .prog { height: 8px; background: var(--panel2); border-radius: 4px; overflow: hidden; border: 1px solid var(--line); }
+  #asmBar { height: 100%; width: 0; background: linear-gradient(90deg, #3fd0b6, #8ff0de); transition: width .2s; }
+  .asmCtl { display: grid; grid-template-columns: auto 1fr 1.4fr 1fr; gap: 6px; margin-top: 10px; }
+  .asmOpts { align-items: end; }
+  .asmCard { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; margin-bottom: 12px; }
+  .asmCard h3 { margin: 0 0 6px; font-size: 15px; }
+  .asmCard p { margin: 8px 0; color: #c9d2dc; line-height: 1.5; }
+  .prog.thin { height: 4px; }
+  #asmStepBar { height: 100%; width: 0; background: #2a6fe8; }
+  .chip { display: inline-block; background: #1f2835; border: 1px solid #2f3b4d; border-radius: 12px; padding: 2px 8px; margin: 0 4px 4px 0; font-size: 11.5px; color: #c9d2dc; }
+  #asmParts ul { margin: 4px 0 0; padding-left: 0; list-style: none; columns: 2; column-gap: 12px; }
+  #asmParts li { font-size: 12px; color: #c3ccd6; padding: 1px 0; break-inside: avoid; }
+  #asmParts li b { color: var(--acc); display: inline-block; min-width: 26px; }
+  .cut { background: #0c1015; border-radius: 6px; padding: 7px 9px; font-size: 12px; color: #c3ccd6; line-height: 1.6; margin-bottom: 8px; }
+  #asmList { list-style: none; padding: 0; margin: 0 0 10px; border: 1px solid var(--line); border-radius: 8px; max-height: 300px; overflow-y: auto; }
+  #asmList li { padding: 6px 9px; border-bottom: 1px solid #1d242e; cursor: pointer; font-size: 12px; color: #aeb8c4; display: flex; gap: 8px; }
+  #asmList li span { color: var(--mut); min-width: 20px; font-variant-numeric: tabular-nums; }
+  #asmList li:hover { background: #18202a; }
+  #asmList li.done { color: #6f7b88; } #asmList li.done span::after { content: ' ✓'; color: var(--ok); }
+  #asmList li.cur { background: #142846; color: #fff; font-weight: 600; }
+  #asmList li.cal span { color: #ffb36b; }
+  body.asm .exp { display: none; }
+
+  /* ---------- superposiciones ---------- */
+  #toolbar { position: fixed; top: 12px; left: calc(var(--side) + 12px); right: 12px; display: flex; gap: 6px; flex-wrap: wrap; z-index: 4; pointer-events: none; }
+  #toolbar > * { pointer-events: auto; }
+  .tb { background: rgba(20,25,34,.88); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-weight: 600; font-size: 12px; color: #c9d2dc; }
+  .tb.on { border-color: var(--sel); color: #fff; background: rgba(32,62,112,.9); }
+  .tbg { display: flex; gap: 4px; background: rgba(20,25,34,.88); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+  .tbg .tb { border: 0; background: none; }
+  .tbg .tb.on { background: rgba(32,62,112,.9); }
+  .exp, .iso { display: flex; align-items: center; gap: 6px; background: rgba(20,25,34,.88); border: 1px solid var(--line); border-radius: 8px; padding: 2px 10px; font-size: 12px; color: #c9d2dc; font-weight: 600; }
+  .exp input { width: 110px; }
+  #dro { position: fixed; left: calc(var(--side) + 12px); bottom: 12px; display: flex; gap: 4px; z-index: 4; font: 12px ui-monospace, Consolas, monospace; flex-wrap: wrap; max-width: calc(100vw - var(--side) - 400px); }
+  #dro .d { background: rgba(14,18,24,.9); border: 1px solid var(--line); border-radius: 7px; padding: 5px 9px; min-width: 84px; }
+  #dro .d em { display: block; font-style: normal; font: 600 10px system-ui; color: var(--mut); letter-spacing: .5px; }
+  #dro .d.hi { border-color: #6b5a2a; } #dro .d.hi span { color: var(--acc2); }
+  #scope { position: fixed; right: 12px; bottom: 12px; width: 360px; z-index: 4; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: rgba(10,13,18,.94); }
+  #scope .mh { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; font-size: 11.5px; font-weight: 700; border-bottom: 1px solid var(--line); }
+  #scope .mh .seg { padding: 2px; border-radius: 6px; }
+  #scope .mh .seg label { padding: 2px 7px; font-size: 10.5px; }
+  #scopeC { display: block; width: 100%; height: 280px; }
+  #scopeFoot { padding: 4px 9px; font-size: 10.5px; color: var(--mut); border-top: 1px solid var(--line); }
+  #card { position: fixed; right: 12px; top: 58px; width: 300px; z-index: 6; background: rgba(20,25,34,.96); border: 1px solid #2c3a4f; border-radius: 10px; padding: 12px 13px; box-shadow: 0 10px 30px rgba(0,0,0,.4); }
+  #card h3 { margin: 2px 0 4px; font-size: 15px; }
+  #card .cn { color: var(--acc); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; }
+  #card .cs { color: #b8c2cd; font-size: 12px; }
+  #card .cg { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 9px 0; font-size: 12px; }
+  #card .cg span { color: var(--mut); } #card .cg b { text-align: right; font-weight: 600; } #card .cg i { color: var(--mut); font-style: normal; font-weight: 400; }
+  #card .cnote { color: var(--mut); font-size: 11.5px; margin: 6px 0; }
+  #card .buy { display: block; text-align: center; background: #2a6fe8; color: #fff; text-decoration: none; border-radius: 7px; padding: 7px; font-weight: 700; margin: 8px 0 2px; }
+  #card .ca { display: flex; gap: 6px; margin-top: 8px; } #card .ca .btn { flex: 1; padding: 6px; font-size: 12px; }
+  #cardClose { position: absolute; right: 8px; top: 6px; background: none; border: 0; color: var(--mut); cursor: pointer; font-size: 16px; }
+  #tip { position: fixed; z-index: 9; pointer-events: none; display: none; background: rgba(10,13,18,.94); border: 1px solid #2c3a4f; padding: 5px 8px; border-radius: 6px; font-size: 12px; }
+  #tip b { display: block; } #tip span { color: var(--acc); font-size: 11px; }
+  #labels .lbl { position: fixed; left: 0; top: 0; z-index: 3; white-space: nowrap; background: rgba(14,18,24,.86); border: 1px solid #2c3a4f; border-radius: 10px; padding: 1px 7px 1px 2px; font-size: 10.5px; cursor: pointer; color: #c9d2dc; margin: -9px 0 0 -9px; }
+  #labels .lbl b { display: inline-block; min-width: 16px; text-align: center; background: var(--acc); color: #06201b; border-radius: 8px; margin-right: 4px; font-size: 10px; }
+  #labels .lbl.sel { border-color: var(--sel); background: rgba(32,62,112,.95); color: #fff; }
+  #toast { position: fixed; left: 50%; bottom: 70px; transform: translateX(-50%) translateY(20px); opacity: 0; transition: all .25s; background: #1f2835; border: 1px solid #34445c; padding: 9px 14px; border-radius: 8px; z-index: 10; pointer-events: none; }
+  #toast.on { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<aside id="side">
+  <header>
+    <div class="hrow"><h1><i></i>Mano biónica DIY</h1><a class="backlab" href="https://tinymoonlabs.com/#productos" title="Volver a Tiny Moon Labs">← Volver al Lab</a></div>
+    <p>Mano robótica de 17 grados de libertad, con los servos adentro de la palma y bielas a cada falange, controlada con las señales eléctricas de los músculos del antebrazo (EMG).</p>
+    <p class="demo">Demo conceptual de <a href="https://tinymoonlabs.com" target="_blank" rel="noopener">Tiny Moon Labs</a>: una simulación, no un producto ni un dispositivo médico.</p>
+  </header>
+  <nav class="tabs">
+    <button data-tab="op" class="on">Operación</button>
+    <button data-tab="parts">Partes y precios</button>
+    <button data-tab="asm">Armado</button>
+    <button data-tab="info">Cómo funciona</button>
+  </nav>
+
+  <section class="tab" id="tab-op">
+    <div class="sec leapBox">
+      <div class="lhead"><label class="lab">Controlá con tu mano</label><span id="leapSt" class="pill off">sin conectar</span></div>
+      <div class="seg" style="margin-bottom:6px">
+        <label><input type="radio" name="handSrc" value="leap" checked>Leap Motion<small>infrarrojo · 3D preciso</small></label>
+        <label><input type="radio" name="handSrc" value="cam">Cámara web<small>MediaPipe · en el navegador</small></label>
+      </div>
+      <div class="btns"><button class="btn pri2" id="leapBtn">Conectar Leap</button><button class="btn" id="leapCal" disabled title="Con la mano abierta y relajada sobre el sensor">Calibrar mano abierta</button></div>
+      <div class="seg" style="margin-top:6px">
+        <label><input type="radio" name="leapMode" value="emg" checked>Como la persona<small>tu mano → músculos → EMG → mano</small></label>
+        <label><input type="radio" name="leapMode" value="direct">Directo<small>tu mano → servos</small></label>
+      </div>
+      <div class="note" id="camHelp" hidden>La primera vez baja MediaPipe y su modelo de internet (~10 MB) y pide permiso para la cámara. La cámara no ve el antebrazo: la muñeca se mide contra la vertical, así que conviene tener el antebrazo derecho.</div>
+      <div class="note" id="leapHelp" hidden>No responde el puente. Abrí una terminal en la carpeta <code>leap</code> y corré <code>python leap_bridge.py</code> (necesita el servicio de Ultraleap, numpy y opencv-python).</div>
+    </div>
+    <div class="sec">
+      <div class="lhead"><label class="lab">Lo que hace la persona</label><label class="chk"><input type="checkbox" id="auto">Demo automática</label></div>
+      <div id="gest"></div>
+      <label class="chk" style="margin-top:8px"><input type="checkbox" id="manual">Mover cada dedo por separado</label>
+      <div id="manualBox" hidden></div>
+    </div>
+    <div class="sec sl">
+      <div><label>Cuánto cierra <b id="intV"></b></label><input type="range" id="intensity" min="0.3" max="1" step="0.01" value="0.85"></div>
+      <div><label>Fuerza al apretar <b id="forceV"></b></label><input type="range" id="force" min="0" max="1" step="0.01" value="0.4"></div>
+    </div>
+    <div class="sec">
+      <label>Decodificador</label>
+      <div class="seg">
+        <label><input type="radio" name="mode" value="lda" checked>Gestos (LDA)<small>10 clases + amplitud proporcional</small></label>
+        <label><input type="radio" name="mode" value="reg">Regresión<small>cada dedo continuo</small></label>
+      </div>
+    </div>
+    <div class="sec detBox">
+      <div class="detTop"><span id="detName">—</span><span id="detConf"></span></div>
+      <div id="probs"></div>
+      <div id="regBars"></div>
+    </div>
+    <div class="sec btns">
+      <button class="btn pri" id="btnCal">⟲ Recalibrar</button>
+      <button class="btn" id="btnConf">Matriz de confusión</button>
+    </div>
+    <div class="sec" id="calBox">
+      <div id="calRes"></div>
+      <canvas id="conf" width="400" height="300" hidden></canvas>
+    </div>
+    <div class="sec">
+      <label>Mano robótica</label>
+      <div class="detBox">
+        <div class="row" style="margin-bottom:6px">
+          <label class="chk"><input type="checkbox" id="smOn" checked>Antivibración</label>
+          <label class="chk"><input type="checkbox" id="smHold" checked>Retener postura quieta</label>
+        </div>
+        <div class="sl">
+          <div><label>Zona muerta <b id="smDbV"></b></label><input type="range" id="smDb" min="0" max="6" step="0.1" value="2.5"></div>
+          <div><label>Suavizado <b id="smFcV"></b></label><input type="range" id="smFc" min="0" max="1" step="0.01" value="0.68"></div>
+        </div>
+        <div class="note" style="margin-top:6px">Quieta, la mano deja de corregir: los servos no tiemblan ni zumban. A cambio, cada cambio de gesto tarda un poco más. Mirá «Motores en movimiento» y «Latencia» abajo.</div>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="lhead"><label class="lab">Control por dedo</label><span><button class="lb" id="mrCopy">copiar postura</button> · <button class="lb" id="mrAll">todo manual</button> · <button class="lb" id="mrNone">todo EMG</button></span></div>
+      <div id="mrBox"></div>
+    </div>
+    <div class="sec">
+      <label class="lab">Brazalete: amplitud por canal (vista desde el codo)</label>
+      <canvas id="band" width="400" height="220"></canvas>
+    </div>
+    <div class="sec">
+      <label class="lab">Ruido e interferencias</label>
+      <div class="sl">
+        <div><label>Red eléctrica 50 Hz <b id="humV"></b></label><input type="range" id="hum" min="0" max="1.5" step="0.01" value="0.25"></div>
+        <div><label>Movimiento y cables <b id="motV"></b></label><input type="range" id="motion" min="0" max="2" step="0.01" value="0.3"></div>
+        <div><label>Fatiga muscular <b id="fatV"></b></label><input type="range" id="fatigue" min="0" max="1" step="0.01" value="0"></div>
+        <div><label>Electrodo despegado</label><select id="detached"><option value="-1">Ninguno</option></select></div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <label class="chk"><input type="checkbox" id="fBand" checked>Pasabanda 20–450 Hz</label>
+        <label class="chk"><input type="checkbox" id="fNotch" checked>Notch 50 Hz</label>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="lhead"><label class="lab">Bus serie de los servos (1 Mbps)</label><button id="clearLog">limpiar</button></div>
+      <div id="log"></div>
+    </div>
+  </section>
+
+  <section class="tab" id="tab-parts" hidden>
+    <div class="sec">
+      <label>Actuadores</label>
+      <div class="seg">
+        <label><input type="radio" name="actOpt" value="bus" checked>Servos de bus<small>Feetech STS3215 · posición y carga</small></label>
+        <label><input type="radio" name="actOpt" value="pwm">Servos PWM<small>MG90S + PCA9685 · económico</small></label>
+      </div>
+    </div>
+    <div class="sec">
+      <label>Lectura de EMG</label>
+      <div class="seg">
+        <label><input type="radio" name="emgOpt" value="ads" checked>8 canales ADS1299<small>24 bits · señal cruda</small></label>
+        <label><input type="radio" name="emgOpt" value="cheap">Sensores sueltos<small>módulos de 1 canal</small></label>
+      </div>
+    </div>
+    <div class="sec row">
+      <input type="search" id="bomSearch" placeholder="Buscar parte…">
+    </div>
+    <div class="tw"><table><tbody id="bomBody"></tbody></table></div>
+    <div id="tot"></div>
+    <div class="note">Clic en una fila: la marca en 3D y enfoca. ✓ = precio de un listado concreto · ≈ = estimado. Tildá lo que ya tenés para ver lo que falta comprar.</div>
+    <div class="note" id="fxNote"></div>
+  </section>
+
+  <section class="tab" id="tab-asm" hidden>
+    <div class="asmHead"><b id="asmCount">Paso 1</b><span id="asmPhase"></span></div>
+    <div class="prog"><div id="asmBar"></div></div>
+    <div class="sec asmCtl">
+      <button class="btn" id="asmFirst" title="Volver al inicio">⏮</button>
+      <button class="btn" id="asmPrev">◀ Anterior</button>
+      <button class="btn pri" id="asmPlay">▶ Reproducir todo</button>
+      <button class="btn" id="asmNext">Siguiente ▶</button>
+    </div>
+    <div class="sec row asmOpts">
+      <label class="lab">Velocidad
+        <select id="asmSpeed"><option value="0.5">×0,5</option><option value="1" selected>×1</option><option value="2">×2</option><option value="4">×4</option></select></label>
+      <label class="chk"><input type="checkbox" id="asmGhost">Ver lo que falta</label>
+      <button class="btn" id="asmReplay" title="Repetir la animación de este paso">↻ Repetir paso</button>
+    </div>
+    <div class="asmCard">
+      <h3 id="asmTitle"></h3>
+      <div class="prog thin"><div id="asmStepBar"></div></div>
+      <p id="asmText"></p>
+      <div id="asmExtra"></div>
+      <label class="lab">Herramientas</label>
+      <div id="asmTools"></div>
+      <div id="asmParts"></div>
+    </div>
+    <label class="lab">Secuencia de armado y calibración</label>
+    <ol id="asmList"></ol>
+    <div class="note">Las piezas aparecen en el orden en que se colocan. Los pasos de calibración mueven la mano de verdad y usan la misma simulación de EMG de la pestaña Operación.</div>
+  </section>
+
+  <section class="tab info" id="tab-info" hidden></section>
+</aside>
+
+<div id="toolbar">
+  <div class="tbg">
+    <button class="tb" data-view="general">General</button>
+    <button class="tb" data-view="mano">Mano</button>
+    <button class="tb" data-view="servos">Servos</button>
+    <button class="tb" data-view="brazo">Brazo y electrodos</button>
+    <button class="tb" data-view="electronica">Electrónica</button>
+  </div>
+  <button class="tb on" id="tTendon">Bielas</button>
+  <button class="tb on" id="tMus">Músculos</button>
+  <button class="tb" id="tLbl">Etiquetas</button>
+  <button class="tb on" id="tScope">Osciloscopio</button>
+  <button class="tb" id="tLeap" title="Cámara del Leap Motion o de la cámara web">Cámara mano</button>
+  <button class="tb" id="isoBtn">Aislar</button>
+  <label class="iso"><input type="checkbox" id="hideOthers">ocultar resto</label>
+  <label class="exp">Explosionar <input type="range" id="explode" min="0" max="1.2" step="0.01" value="0"></label>
+</div>
+
+<div id="dro">
+  <div class="d hi"><em>GESTO DETECTADO</em><span id="droG"></span></div>
+  <div class="d"><em>CONFIANZA</em><span id="droC"></span></div>
+  <div class="d"><em>LATENCIA</em><span id="droL"></span></div>
+  <div class="d"><em>DECISIONES</em><span id="droD"></span></div>
+  <div class="d"><em>CORRIENTE</em><span id="droI"></span></div>
+  <div class="d"><em>ERROR MANO</em><span id="droE"></span></div>
+  <div class="d"><em>MOTORES EN MOVIMIENTO</em><span id="droV"></span></div>
+</div>
+
+<div id="scope">
+  <div class="mh">Señal EMG · 8 canales · 2 s
+    <div class="seg">
+      <label><input type="radio" name="scopeV" value="raw">Cruda</label>
+      <label><input type="radio" name="scopeV" value="flt" checked>Filtrada</label>
+      <label><input type="radio" name="scopeV" value="env">Envolvente</label>
+    </div>
+  </div>
+  <canvas id="scopeC"></canvas>
+  <div id="scopeFoot"></div>
+</div>
+
+<div id="leapCam" hidden>
+  <div class="mh"><span id="leapCamTitle" style="color:inherit;font-weight:700">Cámara del Leap · infrarrojo</span> <span id="leapCamInfo"></span></div>
+  <img id="leapImg" alt="Cámara infrarroja del Leap Motion">
+  <canvas id="camCanvas" hidden></canvas>
+  <video id="camVideo" playsinline muted hidden></video>
+</div>
+
+<div id="card" hidden>
+  <button id="cardClose" title="Cerrar">✕</button>
+  <div id="cardBody"></div>
+  <div class="ca"><button class="btn" id="cardFocus">Enfocar</button><button class="btn" id="cardIso">Aislar</button></div>
+</div>
+<div id="tip"></div>
+<div id="labels"></div>
+<div id="toast"></div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script src="vendor/RoomEnvironment.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="models/brazo.js"></script>
+<script src="models/antebrazo.js"></script>
+<script src="js/geo.js"></script>
+<script src="js/hand.js"></script>
+<script src="js/robot.js"></script>
+<script src="js/arm.js"></script>
+<script src="js/emg.js"></script>
+<script src="js/bom.js"></script>
+<script src="js/info.js"></script>
+<script src="js/webcam.js"></script>
+<script src="js/leap.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/assembly.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
