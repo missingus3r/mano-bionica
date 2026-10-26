@@ -66,6 +66,7 @@
   .pill { font-size: 11px; font-weight: 700; border-radius: 99px; padding: 1px 8px; background: #222a35; color: var(--mut); }
   .pill.hand { background: #143522; color: var(--ok); } .pill.nohand, .pill.wait { background: #352a14; color: #ffc46b; } .pill.nobridge { background: #2c1416; color: #ff9b9b; }
   .note code { background: #0c1015; padding: 0 4px; border-radius: 4px; color: #c9d2dc; }
+  .note a { color: #7fb2ff; }
   #leapCam { position: fixed; right: 12px; bottom: 360px; width: 360px; z-index: 4; border: 1px solid #24405c; border-radius: 10px; overflow: hidden; background: rgba(10,13,18,.94); }
   #leapCam .mh { display: flex; justify-content: space-between; padding: 5px 9px; font-size: 11.5px; font-weight: 700; border-bottom: 1px solid var(--line); }
   #leapCam .mh span { color: var(--mut); font-weight: 500; }
@@ -214,7 +215,7 @@
   <header>
     <div class="hrow"><h1><i></i>Mano biónica DIY</h1><a class="backlab" href="https://tinymoonlabs.com/#productos" title="Volver a Tiny Moon Labs">← Volver al Lab</a></div>
     <p>Mano robótica de 17 grados de libertad, con los servos adentro de la palma y bielas a cada falange, controlada con las señales eléctricas de los músculos del antebrazo (EMG).</p>
-    <p class="demo">Demo conceptual de <a href="https://tinymoonlabs.com" target="_blank" rel="noopener">Tiny Moon Labs</a>: una simulación, no un producto ni un dispositivo médico.</p>
+    <p class="demo">Demo conceptual de <a href="https://tinymoonlabs.com/mano.html" target="_blank" rel="noopener">Tiny Moon Labs</a>: una simulación, no un producto ni un dispositivo médico.</p>
   </header>
   <nav class="tabs">
     <button data-tab="op" class="on">Operación</button>
@@ -236,7 +237,7 @@
         <label><input type="radio" name="leapMode" value="direct">Directo<small>tu mano → servos</small></label>
       </div>
       <div class="note" id="camHelp" hidden>La primera vez baja MediaPipe y su modelo de internet (~10 MB) y pide permiso para la cámara. La cámara no ve el antebrazo: la muñeca se mide contra la vertical, así que conviene tener el antebrazo derecho.</div>
-      <div class="note" id="leapHelp" hidden>No responde el puente. Abrí una terminal en la carpeta <code>leap</code> y corré <code>python leap_bridge.py</code> (necesita el servicio de Ultraleap, numpy y opencv-python).</div>
+      <div class="note" id="leapHelp" hidden>No responde el puente. Bajá la carpeta <a href="https://github.com/missingus3r/mano-bionica/tree/main/leap" target="_blank" rel="noopener">leap</a> del repositorio y corré <code>python leap_bridge.py</code> (necesita el servicio de Ultraleap, numpy y opencv-python).</div>
     </div>
     <div class="sec">
       <div class="lhead"><label class="lab">Lo que hace la persona</label><label class="chk"><input type="checkbox" id="auto">Demo automática</label></div>
