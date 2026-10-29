@@ -35,6 +35,16 @@ MB.INFO_HTML = `
   <li>Las yemas y las almohadillas son de TPU (flexible) para agarrar sin resbalar.</li>
 </ul>
 
+<h3>Cuatro formas de mover un dedo</h3>
+<p>La mano viene con bielas, pero el selector <b>«Transmisión de los dedos»</b> de la pestaña Operación la cambia en vivo por otra de las cuatro formas que compara la lámina de Huiwei Technology (HWR-1, un estudio de concepto). La lista de partes, los precios y las notas del armado cambian con ella.</p>
+<ul>
+  <li><b>Bielas</b> (la de esta mano): servos adentro de la mano y barras rígidas a cada falange. Simple y precisa; el costo es que los servos ocupan la palma y la mano pesa.</li>
+  <li><b>Tendones:</b> los servos se van al antebrazo y tiran de cables que pasan por poleas en cada articulación, como los tendones de una mano real (así es, por ejemplo, la Shadow Hand). La mano queda liviana y cede al agarrar, pero los cables se estiran: hay que tensarlos con resortes y cada tanto ajustarlos. En la demo el dedo llega unos 60 ms tarde y rebota un poco al frenar.</li>
+  <li><b>Engranajes:</b> un micromotor por articulación con un tren de reducción hasta un engranaje fijo a la falange. Da mucha fuerza, pero suma peso, ruido y <b>juego</b> entre dientes: en la demo, al invertir el sentido el dedo se queda quieto 1,7° antes de seguir.</li>
+  <li><b>Tornillo de rodillos:</b> un motor gira un husillo y la tuerca, que avanza en línea recta, empuja la falange con una biela corta. Es la que más fuerza y precisión da y la usan manos humanoides de gama alta, pero es lenta (en la demo, hasta 230°/s) y casi no se puede mover a mano. Un tornillo de rodillos planetario de verdad no se consigue de este tamaño por menos de cientos de dólares; la versión casera usa un husillo común con motor N20.</li>
+</ul>
+<p>Con engranajes y con tornillo de rodillos el pulgar sigue con bielas y la punta de cada dedo sigue acoplada con la biela en S. La comparación de la ficha (1 a 5) es cualitativa, no medida.</p>
+
 <h3>De dónde sale la señal</h3>
 <p>Cuando el cerebro manda contraer un músculo, cada unidad motora dispara un pequeño potencial eléctrico. Desde la piel se ve la suma de cientos de ellos: un ruido de <b>20 a 450 Hz</b> cuya amplitud (décimas de milivoltio a ~1 mV) crece con la fuerza. La EMG aparece <b>30 a 100 ms antes</b> de que el dedo se mueva: eso le da ventaja al control.</p>
 <ul>

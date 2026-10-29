@@ -3,7 +3,7 @@
 (function () {
   const T = THREE, MB = window.MB, E = MB.EMG, L = E.live;
   const $ = (s) => document.querySelector(s);
-  const ui = (MB.ui = { labels: false, selected: null, isolated: null, hideOthers: false, explode: 0, tendons: true, muscles: true, scopeView: 'flt', auto: false, cal: null, opt: { act: 'bus', emg: 'ads' } });
+  const ui = (MB.ui = { labels: false, selected: null, isolated: null, hideOthers: false, explode: 0, tendons: true, muscles: true, scopeView: 'flt', auto: false, cal: null, opt: { act: 'bus', emg: 'ads', tr: 'bielas' } });
   const fmt = (n) => '$ ' + Math.round(n).toLocaleString('es-UY');
   const fmtUsd = (n) => 'US$ ' + Math.round(n).toLocaleString('es-UY');
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -17,8 +17,13 @@
   // ---------- Lista de partes ----------
   const HAVE_KEY = 'mb-have-v1';
   let have = store.get(HAVE_KEY, {});
-  const items = () => MB.BOM.items.filter((it) => !it.cfg || it.cfg === ui.opt.act || it.cfg === ui.opt.emg);
+  const items = () => MB.BOM.items
+    .filter((it) => (!it.cfg || it.cfg === ui.opt.act || it.cfg === ui.opt.emg) && (!it.tr || it.tr.includes(ui.opt.tr)))
+    // algunas partes cambian de cantidad según la transmisión de los dedos (0 = no va)
+    .map((it) => (it.qtyTr && it.qtyTr[ui.opt.tr] !== undefined ? Object.assign({}, it, { qty: it.qtyTr[ui.opt.tr], spec: (it.specTr && it.specTr[ui.opt.tr]) || it.spec }) : (it.specTr && it.specTr[ui.opt.tr] ? Object.assign({}, it, { spec: it.specTr[ui.opt.tr] }) : it)))
+    .filter((it) => it.qty > 0);
   const itemByKey = (k) => items().find((it) => it.key === k);
+  ui.itemByKey = itemByKey;
   function shown(o) {
     const mats = Array.isArray(o.material) ? o.material : [o.material];
     if (mats.some((m) => m && (m.visible === false || (m.transparent && m.opacity < 0.02)))) return false;
@@ -44,7 +49,7 @@
         const st = subtotal(it); total += st; if (!have[it.key]) missing += st;
         if ((it.source || '').startsWith('import')) imported += st; else local += st;
         if (!it.verified) estim += st;
-        if (it.cat === 'Actuadores') servos += st;
+        if (it.cat === 'Actuadores' || it.cat === 'Transmisión') servos += st;
         if (it.cat === 'Lectura de EMG') emg += st;
         if (q && !(it.name + ' ' + it.spec + ' ' + it.short).toLowerCase().includes(q)) return;
         const modeled = shownTagged(it.key).length > 0;
@@ -66,7 +71,7 @@
     $('#tot').innerHTML = `
       <div><span>Total del sistema</span><b>${fmt(total)}</b></div>
       <div><span>≈ en dólares (${fx.toFixed(2)} UYU/USD)</span><b>${fmtUsd(total / fx)}</b></div>
-      <div><span>Actuadores (${ui.opt.act === 'bus' ? 'bus serie' : 'PWM'})</span><b>${fmt(servos)}</b></div>
+      <div><span>Actuadores y transmisión (${ui.opt.act === 'bus' ? 'bus serie' : 'PWM'}, ${MB.TRANS[ui.opt.tr].n.toLowerCase()})</span><b>${fmt(servos)}</b></div>
       <div><span>Lectura de EMG (${ui.opt.emg === 'ads' ? 'ADS1299' : 'sensores sueltos'})</span><b>${fmt(emg)}</b></div>
       <div><span>Comprado en Uruguay</span><b>${fmt(local)}</b></div>
       <div><span>Importado (sin flete ni impuestos)</span><b>${fmt(imported)}</b></div>
@@ -87,6 +92,7 @@
     });
   }
   const NOGHOST = ['_'];
+  ui.applyIsolation = () => applyIsolation();
   function applyIsolation() {
     const iso = ui.isolated;
     MB.allMaterialParts().forEach((p) => {
@@ -195,6 +201,9 @@
       mano: [wr.clone().add(new T.Vector3(0, 95, 0)), 380, new T.Vector3(0.35, 0.22, 1)],
       // los servos y las bielas están del lado del dorso: se miran desde atrás
       servos: [wr.clone().add(new T.Vector3(0, 50, 0)), 300, new T.Vector3(-0.35, 0.3, -1)],
+      // al elegir transmisión: con tendones se mira de costado (antebrazo y mano), el resto desde el dorso
+      transmision: MB.trans && MB.trans.mode === 'tendones' ? [rp.clone().add(new T.Vector3(0, 190, 0)), 560, new T.Vector3(0.75, 0.2, 0.62)]
+        : [wr.clone().add(new T.Vector3(0, 70, 0)), 330, new T.Vector3(-0.3, 0.35, -1)],
       brazo: [new T.Vector3(hp.x, 140, hp.z), 470, new T.Vector3(-0.25, 0.2, 1)],
       electronica: [new T.Vector3(tp.x + 40, 0, tp.z), 480, new T.Vector3(0.1, 1, 0.55)],
     }[name];
@@ -364,7 +373,7 @@
     $('#regBars').innerHTML = ['Pulgar', 'Índice', 'Medio', 'Anular', 'Meñique', 'Muñeca'].map((n, i) => `<span>${n}</span><i><b id="rb${i}"></b></i><em id="rv${i}"></em>`).join('');
 
     // opciones de hardware
-    ui.opt = store.get('mb-opt-v1', ui.opt);
+    ui.opt = Object.assign({}, ui.opt, store.get('mb-opt-v1', {}));
     const applyOpt = () => {
       E.act = ui.opt.act;
       MB.bench.applyCfg(ui.opt.emg, ui.opt.act);
@@ -374,6 +383,16 @@
     };
     document.querySelectorAll('input[name=actOpt]').forEach((r) => { r.checked = r.value === ui.opt.act; r.onchange = () => { ui.opt.act = r.value; applyOpt(); }; });
     document.querySelectorAll('input[name=emgOpt]').forEach((r) => { r.checked = r.value === ui.opt.emg; r.onchange = () => { ui.opt.emg = r.value; applyOpt(); }; });
+    // transmisión de los dedos: cambia la mano en vivo, la ficha comparativa y la lista de partes
+    const trCard = () => {
+      const t = MB.TRANS[ui.opt.tr];
+      $('#trCard').innerHTML = `<div class="trm">${Object.keys(MB.TRANS_KEYS).map((k) => `<span>${MB.TRANS_KEYS[k]}</span><i>${[1, 2, 3, 4, 5].map((v) => `<b class="${v <= t.s[k] ? 'on' : ''}"></b>`).join('')}</i>`).join('')}</div>`
+        + `<p><b>A favor:</b> ${esc(t.pros)}</p><p><b>En contra:</b> ${esc(t.cons)}</p><p><em>En la demo:</em> ${esc(t.demo)}</p>`
+        + `<p><em>Comparación cualitativa (1 a 5), no medida.${ui.opt.tr === 'engranajes' || ui.opt.tr === 'husillo' ? ' El pulgar sigue con bielas.' : ''}</em></p>`;
+    };
+    document.querySelectorAll('input[name=trOpt]').forEach((r) => { r.checked = r.value === ui.opt.tr; r.onchange = () => { ui.opt.tr = r.value; MB.setTransmission(r.value); trCard(); if (r.value !== 'bielas') MB.view('transmision'); log(`⚙ Transmisión: ${MB.TRANS[r.value].n}`, 'hdr'); applyOpt(); }; });
+    MB.setTransmission(ui.opt.tr);
+    trCard();
     applyOpt();
 
     $('#bomSearch').oninput = renderBOM;
@@ -500,6 +519,8 @@
   const hex = (v) => v.toString(16).toUpperCase().padStart(2, '0');
   function busFrame() {
     const q = L.robotQ;
+    const tl = MB.trans && MB.trans.busLine(q);
+    if (tl) return tl;
     if (ui.opt.act === 'bus') {
       // SYNC WRITE (0x83) a la dirección 0x2A (posición objetivo), 2 bytes por servo, IDs 1–17
       const pos = q.map((v) => Math.max(0, Math.min(4095, Math.round(2048 + (v * 1.55 / (2 * Math.PI)) * 4096))));

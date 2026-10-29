@@ -39,6 +39,15 @@
   .seg { display: flex; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 3px; gap: 3px; }
   .seg label { flex: 1; text-align: center; padding: 7px 4px; border-radius: 6px; cursor: pointer; color: var(--mut); font-weight: 600; font-size: 12px; }
   .seg input { display: none; }
+  .seg4 { display: grid; grid-template-columns: 1fr 1fr; }
+  #trCard { margin-top: 8px; background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; font-size: 12px; }
+  #trCard .trm { display: grid; grid-template-columns: 118px 1fr; gap: 3px 8px; align-items: center; margin: 2px 0 8px; }
+  #trCard .trm span { color: var(--mut); font-size: 11px; }
+  #trCard .trm i { display: flex; gap: 3px; }
+  #trCard .trm i b { flex: 1; height: 6px; border-radius: 3px; background: #262e3a; }
+  #trCard .trm i b.on { background: var(--acc); }
+  #trCard p { margin: 3px 0; color: var(--tx); line-height: 1.4; }
+  #trCard p em { color: var(--mut); font-style: normal; }
   .seg label:has(input:checked) { background: #1f3a3a; color: var(--tx); box-shadow: inset 0 0 0 1px #2c6a62; }
   .seg small { display: block; font-weight: 400; font-size: 10.5px; color: var(--mut); }
   select, input[type=search] { width: 100%; background: var(--panel2); border: 1px solid var(--line); border-radius: 7px; color: var(--tx); padding: 7px 8px; font: inherit; }
@@ -246,7 +255,12 @@
     .tw table { min-width: 540px; }
     /* señal y cámaras: más chicas, arriba; arrancan ocultas para no tapar la máquina (botones de la barra) */
     #scope, #mic { top: 44px; right: 6px; bottom: auto; width: 58vw; }
-    #leapCam { top: 44px; left: 6px; right: auto; bottom: auto; width: 46vw; }
+    /* la cámara en el celu va chica en la esquina para no tapar la mano 3D (Bruno, 26/10) */
+    #leapCam { top: 44px; left: 6px; right: auto; bottom: auto; width: 24vw; max-width: 104px; opacity: .9; }
+    #leapCam .mh { padding: 2px 5px; font-size: 8.5px; white-space: nowrap; overflow: hidden; }
+    #leapCam .mh #leapCamTitle { overflow: hidden; text-overflow: ellipsis; }
+    #leapCam #leapCamInfo { display: none; }
+    #leapCam img, #leapCam canvas { max-height: 13vh; object-fit: contain; }
     #scopeC { height: 128px; }
     #scope .mh, #mic .mh { font-size: 10px; flex-wrap: wrap; gap: 3px; }
     #micView { height: 120px; }
@@ -256,6 +270,8 @@
     :root, body.wide { --side: 320px; }
     #side header p:not(.demo) { display: none; }
     #scope, #mic { width: 240px; }
+    #leapCam { width: 170px; }
+    #leapCam img, #leapCam canvas { max-height: 30vh; object-fit: contain; }
     #scopeC { height: 150px; }
     #micView { height: 150px; }
   }
@@ -302,6 +318,16 @@
     <div class="sec sl">
       <div><label>Cuánto cierra <b id="intV"></b></label><input type="range" id="intensity" min="0.3" max="1" step="0.01" value="0.85"></div>
       <div><label>Fuerza al apretar <b id="forceV"></b></label><input type="range" id="force" min="0" max="1" step="0.01" value="0.4"></div>
+    </div>
+    <div class="sec">
+      <label>Transmisión de los dedos</label>
+      <div class="seg seg4" id="trSeg">
+        <label><input type="radio" name="trOpt" value="bielas" checked>Bielas<small>servos en la mano</small></label>
+        <label><input type="radio" name="trOpt" value="tendones">Tendones<small>cables y poleas</small></label>
+        <label><input type="radio" name="trOpt" value="engranajes">Engranajes<small>motor y reducción</small></label>
+        <label><input type="radio" name="trOpt" value="husillo">Tornillo de rodillos<small>actuador lineal</small></label>
+      </div>
+      <div id="trCard"></div>
     </div>
     <div class="sec">
       <label>Decodificador</label>
@@ -368,7 +394,7 @@
     <div class="sec">
       <label>Actuadores</label>
       <div class="seg">
-        <label><input type="radio" name="actOpt" value="bus" checked>Servos de bus<small>Feetech STS3215 · posición y carga</small></label>
+        <label><input type="radio" name="actOpt" value="bus" checked>Servos de bus<small>Feetech SCS0009 · posición y carga</small></label>
         <label><input type="radio" name="actOpt" value="pwm">Servos PWM<small>MG90S + PCA9685 · económico</small></label>
       </div>
     </div>
@@ -485,6 +511,7 @@
 <script src="js/geo.js"></script>
 <script src="js/hand.js"></script>
 <script src="js/robot.js"></script>
+<script src="js/transmission.js"></script>
 <script src="js/arm.js"></script>
 <script src="js/emg.js"></script>
 <script src="js/bom.js"></script>

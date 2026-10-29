@@ -24,6 +24,11 @@ Una mano de acrílico negro cortado con láser, con los motores adentro como las
 Una persona con 8 pares de electrodos en el antebrazo la controla: el microcontrolador lee la actividad
 eléctrica de sus músculos (EMG), reconoce qué quiere hacer y mueve la mano.
 
+La transmisión de los dedos se puede cambiar en vivo por otra de las cuatro que compara la lámina
+*Inside the transmission* de Huiwei Technology (HWR-1): **bielas** (la de esta mano), **tendones** (servos en el
+antebrazo, cables y poleas), **engranajes** (micromotor y tren de reducción por articulación) y **tornillo de
+rodillos** (actuador lineal). Cambian la mano en 3D, cómo sigue al comando, la lista de partes y el armado.
+
 | | |
 |---|---|
 | Grados de libertad | 17: pulgar 4, cada dedo 3 (abducción, MCP, PIP con la DIP acoplada), muñeca 1 |
@@ -88,6 +93,7 @@ Hay dos modos:
 | `js/geo.js` | Materiales por pieza, falanges, cápsulas, cajas redondeadas y el antebrazo con sección elíptica. |
 | `js/hand.js` | Cinemática de la mano: 17 grados de libertad, dedos y pulgar. |
 | `js/robot.js` | La mano robótica: placas de acrílico, servos, bielas, antebrazo y muñeca. |
+| `js/transmission.js` | Las otras tres transmisiones (tendones, engranajes, tornillo de rodillos), su comparación y cómo filtran el comando. |
 | `js/arm.js` | Brazo de la persona (modelo real), músculos, electrodos y la electrónica sobre la mesa. |
 | `js/emg.js` | Gestos, modelo muscular, generador de EMG, filtros, características, LDA, regresión y servos. |
 | `js/ui.js` | Selección, aislamiento, etiquetas, lista de partes, osciloscopio, brazalete y consola. |

@@ -19,6 +19,7 @@ window.MB = window.MB || {};
     servoLbl: { color: 0x4a5160, roughness: 0.6, metalness: 0 },
     horn: { color: 0xd9dde3, roughness: 0.3, metalness: 0.7 },
     spool: { color: 0xf2b84b, roughness: 0.5, metalness: 0 },
+    tendon: { color: 0x3fa9ff, roughness: 0.45, metalness: 0, emissive: 0x1a5c99, emissiveIntensity: 0.6 },
     pcb: { color: 0x1d6b45, roughness: 0.55, metalness: 0.05 },
     pcbBlue: { color: 0x1f4fa3, roughness: 0.55, metalness: 0.05 },
     pcbPurple: { color: 0x5b2d8e, roughness: 0.55, metalness: 0.05 },

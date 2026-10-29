@@ -45,6 +45,7 @@
   function start(models) {
   // La persona a la izquierda, la mano robótica a la derecha, la electrónica adelante
   MB.buildRobot(scene, new T.Vector3(175, 0, -10));
+  MB.buildTransmissions(MB.robot);
   MB.buildHuman(scene, new T.Vector3(-175, 0, -10), models);
   MB.buildBench(scene);
   MB.step(null);
@@ -75,10 +76,11 @@
     const A = MB.asm, rq = A.active && A.robotQ ? A.robotQ : L.robotQ;
     // en el armado, la mano se mueve suave hacia lo que pide cada paso
     if (A.active && A.robotQ) { MB._asmQ = (MB._asmQ || L.robotQ.slice()).map((v, i) => v + (rq[i] - v) * Math.min(1, dt * 8)); MB.robot.setPose(MB._asmQ); }
-    else { MB._asmQ = null; MB.robot.setPose(rq); }
+    else { MB._asmQ = null; MB.robot.setPose(MB.trans.filter(rq, dt)); }
     MB.human.setPose(L.humanQ);
     MB.human.setActivation(L.muscleAct);
     MB.updateLinks();
+    MB.trans.update();
     MB.ui.frame(dt);
     controls.update();
     renderer.render(scene, camera);

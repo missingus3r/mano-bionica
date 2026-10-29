@@ -10,7 +10,7 @@
     noise: { hum: 0.25, motion: 0.3, floor: 1, detached: -1, fatigue: 0 },
     filt: { band: true, notch: true },
     mode: 'lda', votes: 4, reject: 0.55,
-    act: 'bus', // 'bus' = servos de bus STS3215 · 'pwm' = servos MG996R/MG90S + PCA9685
+    act: 'bus', // 'bus' = servos de bus Feetech SCS0009 y SCS15 · 'pwm' = servos MG90S y MG996R + PCA9685
     t: 0,
   });
 

@@ -117,6 +117,8 @@
     return { g, horn, tip };
   }
 
+  MB.robotMicro = micro; // también lo usan los servos del antebrazo de la versión con tendones (transmission.js)
+
   // ---------- Robot completo ----------
   MB.buildRobot = function (scene, at) {
     const R = (MB.robot = { servos: [], bars: [], tendons: [] });

@@ -160,7 +160,7 @@
 
   // ---------- Pasos ----------
   function partsHtml(s) {
-    const its = (s.parts || []).map((k) => MB.BOM.items.find((it) => it.key === k && (!it.cfg || it.cfg === MB.ui.opt.act || it.cfg === MB.ui.opt.emg))).filter(Boolean);
+    const its = (s.parts || []).map((k) => MB.ui.itemByKey(k)).filter(Boolean);
     if (!its.length) return '';
     return `<label class="lab" style="margin-top:8px">Partes</label><ul>${its.map((it) => `<li><b>${it.qty}×</b>${esc(it.short || it.name)}</li>`).join('')}</ul>`;
   }
@@ -171,7 +171,11 @@
     $('#asmBar').style.width = ((A.cur + 1) / STEPS.length) * 100 + '%';
     $('#asmTitle').textContent = s.title;
     $('#asmText').textContent = txt;
-    $('#asmExtra').innerHTML = s.extra || '';
+    // el armado animado es el de bielas: con otra transmisión se avisa qué cambia en los pasos que la tocan
+    const tm = MB.trans && MB.trans.mode, tr = tm && MB.TRANS[tm];
+    const trNote = tm && tm !== 'bielas' && (A.cur === 0 || (s.parts || []).some((k) => k === 'servo' || k === 'bielas'))
+      ? `<div class="note"><b>Con ${esc(tr.n.toLowerCase())}:</b> ${esc(tr.asm)}</div>` : '';
+    $('#asmExtra').innerHTML = trNote + (s.extra || '');
     $('#asmTools').innerHTML = (s.tools || []).map((t) => `<span class="chip">${esc(t)}</span>`).join('') || '<span class="chip">—</span>';
     $('#asmParts').innerHTML = partsHtml(s);
     document.querySelectorAll('#asmList li').forEach((li, i) => { li.classList.toggle('cur', i === A.cur); li.classList.toggle('done', i < A.cur); });
